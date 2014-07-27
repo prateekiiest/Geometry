@@ -39,6 +39,7 @@ class Polygon(object):
 	def initDataCW(self, data):
 		""" Takes list of cartesian coordinates and returns
 			doubly linked list of nodes cycling clockwise.
+			Other than in __init__ need to self.head = ...
 		"""
 		nodes = [Node(coordinate) for coordinate in data]
 		nodes[0].prev  = nodes[-1]
@@ -55,6 +56,7 @@ class Polygon(object):
 	def initDataCCW(self, data):
 		""" Takes list of cartesian coordinates and returns
 			doubly linked list of nodes cyclic CCW.
+			Need to self.head = ...
 		"""
 		nodes = [Node(coordinate) for coordinate in data]
 		nodes[-1].prev = nodes[0]
@@ -65,7 +67,7 @@ class Polygon(object):
 			nodes[i].next = nodes[i-1]
 		for i in xrange(0, n-1):
 			nodes[i].prev = nodes[i+1]
-		self.CW = False
+		self.CW   = False
 		return nodes[0]
 
 	def search(self, coordinate):
