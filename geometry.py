@@ -108,14 +108,18 @@ class Polygon(object):
 		assumptions made in node class regarding coordinates.
 		--Need to implement method for verifying simple poly.
 	"""
-	def __init__(self, data):
+	def __init__(self, data, CW_bool):
 
 		self.data    = data
-		self.head    = self.initDataCW(data)
+		self.CW 	 = None
 		self.vnumber = self.countVertices()
 		self.convex  = []
 		self.concave = []
-		self.CW 	 = None
+
+		if CW_bool:
+			self.head = self.initDataCW(data)
+		else:
+			self.head = self.initDataCCW(data)
 
 	def initDataCW(self, data):
 		""" Takes list of cartesian coordinates and returns
@@ -123,14 +127,10 @@ class Polygon(object):
 			Other than in __init__ need to self.head = ...
 		"""
 		nodes = [Node(coordinate) for coordinate in data]
-		nodes[0].prev  = nodes[-1]
-		nodes[-1].next = nodes[0]
-
-		n = len(nodes)
-		for i in xrange(1, n):
-			nodes[i].prev = nodes[i-1]
-		for i in xrange(0, n-1):
-			nodes[i].next = nodes[i+1]
+		n     = len(nodes)
+		for i in xrange(n):
+			nodes[i % n].prev = nodes[(i-1) % n]
+			nodes[i % n].next = nodes[(i+1) % n]
 		self.CW = True
 		return nodes[0]
 
@@ -140,14 +140,10 @@ class Polygon(object):
 			Need to self.head = ...
 		"""
 		nodes = [Node(coordinate) for coordinate in data]
-		nodes[-1].prev = nodes[0]
-		nodes[0].next  = nodes[-1]
-		
 		n = len(nodes)
-		for i in xrange(1, n):
-			nodes[i].next = nodes[i-1]
-		for i in xrange(0, n-1):
-			nodes[i].prev = nodes[i+1]
+		for i in xrange(n):
+			nodes[i % n].next = nodes[(i-1) % n]
+			nodes[i].prev = nodes[(i+1) % n]
 		self.CW = False
 		return nodes[0]
 
