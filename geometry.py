@@ -7,7 +7,6 @@ import math
 
 
 
-
 class Node(object):
 	""" Node Class:
 		Used to represent vertices of simple polygon using a
@@ -30,6 +29,7 @@ class Vector(object):
 	"""
 	def __init__(self, coordinate):
 		self.vector = coordinate
+		self.label = None
 
 	def dimension(self):
 		return len(self.vector)
@@ -100,6 +100,9 @@ class Vector(object):
 	def magnitude(self):
 		return math.sqrt(sum([x**2 for x in self.vector]))
 
+	def __repr__(self):
+		return '%s %s' % (self.vector, self.label)
+
 
 
 class Polygon(object):
@@ -108,6 +111,10 @@ class Polygon(object):
 		assumptions made in node class regarding coordinates.
 		--Need to implement method for verifying simple poly.
 	"""
+	################
+	# Data Structure
+	################
+
 	def __init__(self, data, CW_bool):
 
 		self.data    = data
@@ -120,6 +127,9 @@ class Polygon(object):
 			self.head = self.initDataCW(data)
 		else:
 			self.head = self.initDataCCW(data)
+
+	def clone(self):
+		return Polygon(self.data)
 
 	def initDataCW(self, data):
 		""" Takes list of cartesian coordinates and returns
@@ -177,6 +187,10 @@ class Polygon(object):
 	def countVertices(self):
 		return len(self.data)
 
+	#####################
+	#Polygon Line Segment
+	#####################
+
 	def getSlope(self, vertexA, vertexB):
 		""" Slope between line-segment vertexA - vertexB
 		"""
@@ -205,6 +219,10 @@ class Polygon(object):
 			second = first.next
 		return border
 
+	#############
+	#Polygon Area
+	#############
+
 	def SAHelper(self, vertexA, vertexB):
 		""" Used in centroid/signed area formulae:
 			returns + area => CCW cycling
@@ -231,6 +249,10 @@ class Polygon(object):
 
 	def getAreaTotal(self):
 		return abs(self.getSignedAreaTotal())
+
+	###################
+	#Polygon Properties
+	###################
 
 	def getCentroid(self):
 		""" Calculates centroid of simple polygon.
@@ -305,8 +327,9 @@ class Polygon(object):
 			self.getConvexVertices()
 		return True if not self.concave else False
 
-	def clone(self):
-		return Polygon(self.data)
+	##############
+	#Miscellaneous
+	##############
 
 	def __repr__(self):
 		return '%s-gon at %s' % (self.vnumber, self.head)
@@ -321,7 +344,7 @@ class Triangulate(object):
 	"""
 	def __init__(self, data):
 
-		self.polygon = Polygon(data)
+		self.polygon = Polygon(data, True)
 		self.triangulation = []
 
 	def getTriangle(self, vertex):
@@ -436,5 +459,5 @@ class Triangulate(object):
 #####################################
 
 X = [(0,0), (0,1), (1,1), (1,0)]
-Square = Polygon(X)
+Square = Polygon(X, True)
 SquareT = Triangulate(X)
