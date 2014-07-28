@@ -8,6 +8,10 @@ class Vector(object):
 		self.vector = coordinate
 		self.label = None
 
+	##################
+	#Vector Properties
+	##################
+
 	def dimension(self):
 		return len(self.vector)
 
@@ -77,5 +81,9 @@ class Vector(object):
 	def magnitude(self):
 		return math.sqrt(sum([x**2 for x in self.vector]))
 
+	##############
+	#Miscellaneous
+	##############
+	
 	def __repr__(self):
 		return '%s %s' % (self.vector, self.label)
