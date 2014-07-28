@@ -6,102 +6,20 @@
 import math
 
 
-
 class Node(object):
 	""" Node Class:
 		Used to represent vertices of simple polygon using a
-		doubly linked list.  Assumptions are that vertices
-		are connected cyclically in clockwise rotation.
+		doubly linked list.
 	"""
 	def __init__(self, coordinate):
-
 		self.coord = coordinate
 		self.next  = None
 		self.prev  = None
 
+
 	def __repr__(self):
 		return repr(self.coord)
 
-
-
-class Vector(object):
-	""" Need to work on accuracy issues with some functions.
-	"""
-	def __init__(self, coordinate):
-		self.vector = coordinate
-		self.label = None
-
-	def dimension(self):
-		return len(self.vector)
-
-	def dotProduct(self, other):
-		if self.dimension() != other.dimension():
-			raise Exception('Invalid operation')
-		return sum([x[0]*x[1] for x in zip(self.vector, other.vector)])
-
-	def crossProduct(self, other):
-		if self.dimension() != 3 or self.dimension() != other.dimension():
-			raise Exception('Invalid operation')
-		u1, u2, u3 = self.vector[0], self.vector[1], self.vector[2]
-		v1, v2, v3 = other.vector[0], other.vector[1], other.vector[2]
-		i = u2*v3 - v2*u3
-		j = -1*(u1*v3 - v1*u3)
-		k = u1*v2 - v1*u2
-		return Vector((i, j, k))
-
-	def tripleProduct(self, other):
-		return (self.crossProduct(other)).magnitude()
-
-	def project(self, dimension):
-		if self.dimension() <= dimension:
-			return Vector(tuple([0 for i in xrange(dimension)]))
-		projection = [0 for i in xrange(self.dimension())]
-		projection[dimension] = self.vector[dimension]
-		return Vector(tuple(projection))
-
-	def normalize(self):
-		mag = self.magnitude()
-		normalized = [(1.0*x)/mag for x in self.vector]
-		return Vector(tuple(normalized))
-
-	def getAngle(self, other):
-		mags = self.magnitude()
-		mago = other.magnitude()
-		dot  = self.dotProduct(other)
-		return math.degrees(math.acos((1.0*dot)/(mags*mago)))
-
-	def orthogonal(self, other):
-		return True if self.dotProduct(other) == 0 else False
-
-	def collinear(self, other):
-		if self.dotProduct(other) == self.magnitude()*other.magnitude():
-			return True
-		return False
-
-	def sum(self, other):
-		if self.dimension() != other.dimension():
-			raise Exception('Invalid operation')
-		summand = [sum(x) for x in zip(self.vector, other.vector)]
-		return Vector(tuple(summand))
-
-	def scale(self, k):
-		scaled = [k*x for x in self.vector]
-		return Vector(tuple(scaled))
-
-	def difference(self, other):
-		if self.dimension() != other.dimension():
-			raise Exception('Invalid operation')
-		difference = [x[0]-x[1] for x in zip(self.vector, other.vector)]
-		return Vector(tuple(difference))
-
-	def negate(self):
-		return Vector(tuple([-x for x in self.vector]))
-
-	def magnitude(self):
-		return math.sqrt(sum([x**2 for x in self.vector]))
-
-	def __repr__(self):
-		return '%s %s' % (self.vector, self.label)
 
 
 
@@ -109,7 +27,6 @@ class Polygon(object):
 	""" Polygon Class:
 		Converts list of coordinates into list of nodes given
 		assumptions made in node class regarding coordinates.
-		--Need to implement method for verifying simple poly.
 	"""
 	#################
 	# Data Properties
@@ -129,14 +46,13 @@ class Polygon(object):
 		else:
 			self.head = self.initDataCCW(data)
 
+
 	def clone(self):
 		return Polygon(self.data)
 
+
 	def initDataCW(self, data):
-		""" Takes list of cartesian coordinates and returns
-			doubly linked list of nodes cycling clockwise.
-			Other than in __init__ need to self.head = ...
-		"""
+
 		nodes = [Node(coordinate) for coordinate in data]
 		n     = len(nodes)
 		for i in xrange(n):
@@ -145,11 +61,9 @@ class Polygon(object):
 		self.CW = True
 		return nodes[0]
 
+
 	def initDataCCW(self, data):
-		""" Takes list of cartesian coordinates and returns
-			doubly linked list of nodes cyclic CCW.
-			Need to self.head = ...
-		"""
+
 		nodes = [Node(coordinate) for coordinate in data]
 		n = len(nodes)
 		for i in xrange(n):
@@ -158,14 +72,13 @@ class Polygon(object):
 		self.CW = False
 		return nodes[0]
 
+
 	def search(self, coordinate):
-		""" Searches for vertex at coordinate.
-		"""
 		return True if coordinate in self.data else False
 
+
 	def remove(self, coordinate):
-		""" Removes if possible vertex at coordinate.
-		"""
+
 		if not self.search(coordinate):
 			raise Exception('Coordinate not in polygon')
 
@@ -185,6 +98,7 @@ class Polygon(object):
 		self.data.remove(coordinate)
 		self.vnumber = self.countVertices()
 
+
 	def countVertices(self):
 		return len(self.data)
 
@@ -192,17 +106,7 @@ class Polygon(object):
 	#Polygon Line Segments
 	######################
 
-	def getSlope(self, vertexA, vertexB):
-		""" Slope between line-segment vertexA - vertexB
-		"""
-		try:
-			slope = ((vertexB.coord[1]  - vertexA.coord[1])/
-					 (vertexB.coord[0]  - vertexA.coord[0]))
-		except Exception as e:
-			return 'Infinity'
-		return (vertexA.coord, vertexB.coord, slope)
-
-	def getBorder(self):
+	def getEdges(self):
 		""" Calculates slopes between each line-segment
 			along border in current orientation and
 			returns as list of triples.
@@ -210,24 +114,28 @@ class Polygon(object):
 		first    	= 	self.head
 		second   	= 	first.next
 		sentinel 	= 	first
-		border   	= 	[self.getSlope(first, second)]
+		lines       =	[]
+		
+		lines.append([first.coord, second.coord])
 
 		first  = second
 		second = first.next
 		while first != sentinel:
-			border.append(self.getSlope(first, second))
+			lines.append([first.coord, second.coord])
 			first  = second
 			second = first.next
 		return border
 
-	def lineIntersection(self, lineA, lineB):
-		""" Not implemented yet, line = [(x1, y1), (x2, y2)]
-		"""
-		return False
 
-	#############
-	#Polygon Area
-	#############
+	def isSimple(self):
+		""" See Line Intersection Class for details.
+		"""
+		LI = LineIntersection(self.getEdges())
+		return LI.checkIntersection()
+
+	##############
+	#Polygon Areas
+	##############
 
 	def getSignedAreaTotal(self):
 		""" Calculates total signed area of polygon.
@@ -244,6 +152,7 @@ class Polygon(object):
 			first    = second
 			second   = first.next
 		return 0.5*area
+
 
 	def getAreaTotal(self):
 		return abs(self.getSignedAreaTotal())
@@ -279,6 +188,7 @@ class Polygon(object):
 			second = first.next
 		return ((1/(6*A))*Cx, (1/(6*A))*Cy)
 
+
 	def checkConvex(self, vertex):
 		""" Checks if angle made by vertex.prev - vertex - vertex.next
 			is convex relative to polygon.  Uses sign of triple product
@@ -299,7 +209,8 @@ class Polygon(object):
 		else:
 			return True if signed_area > 0 else False
 
-	def isConvexPolygon(self):
+
+	def isConvex(self):
 
 		if not self.convex and not self.concave:
 			self.getConvexVertices()
@@ -317,16 +228,19 @@ class Polygon(object):
 		return 1.0*(vertexA.coord[0]*vertexB.coord[1] -
 					vertexB.coord[0]*vertexA.coord[1])
 
+
 	def getCVHelper(self, vertex):
-		""" Helper to getConvexVertices
+		""" Used in getConvexVertices
 		"""
 		if self.checkConvex(vertex):
 			self.convex.append(vertex.coord)
 		else:
 			self.concave.append(vertex.coord)
 
-	def getConvexVertices(self):
 
+	def getConvexVertices(self):
+		""" Used in isConvex
+		"""
 		self.convex = self.concave = []
 		cursor      = self.head
 		sentinel    = cursor
@@ -337,38 +251,6 @@ class Polygon(object):
 			self.getCVHelper(cursor)
 			cursor = cursor.next
 
-	def labelSweepPoints(self):
-
-		first    	= 	self.head
-		second   	= 	first.next
-		sentinel 	= 	first
-		count       =	0
-		endpoints   =   []
-
-		start 		= Vector(first.coord)
-		start.label = str(count)
-		end 		= Vector(second.coord)
-		end.label 	= str(count)
-		endpoints.append(start)
-		endpoints.append(end)
-
-		first  = second
-		second = first.next
-		count += 1
-		while first != sentinel:
-
-			start 		= Vector(first.coord)
-			start.label = str(count)
-			end 		= Vector(second.coord)
-			end.label 	= str(count)
-			endpoints.append(start)
-			endpoints.append(end)
-
-			first  = second
-			second = first.next
-			count += 1
-		return endpoints
-
 	##############
 	#Miscellaneous
 	##############
@@ -378,11 +260,12 @@ class Polygon(object):
 
 
 
+
 class Triangulate(object):
 	""" Triangulate Class for Simple Polygons in
 		Polygon Class.
-		Note:  Reduces data to triangle so should
-			   send self.data, not polygon class.
+		Note:  Reduces data to triangle so cannot
+			   use initial polygon after triangulation.
 	"""
 	def __init__(self, data):
 		self.polygon = Polygon(data, True)
@@ -398,11 +281,13 @@ class Triangulate(object):
 		"""
 		return [vertex.prev.coord, vertex.coord, vertex.next.coord]
 
+
 	def getTriangleNormals(self, triangle):
 		""" Returns normals of triangle edges. norm([x,y]) = (-y,x)
 			Note that these normals are not of length 1.
 		"""
 		return [(-coord[1], coord[0]) for coord in triangle]
+
 
 	def getBarycentricCoordinate(self, triangle, point):
 		""" http://en.wikipedia.org/wiki/Barycentric_coordinate_system
@@ -422,10 +307,9 @@ class Triangulate(object):
 		z_3  	 = 1.0 - z_1 - z_2
 		return  (z_1, z_2, z_3)
 
+
 	def checkPointIn(self, triangle, point):
-		""" Using definition of Barycentric Coordinate System:
-			if coordinates all in (0,1) then inside, else outside
-			or on border.
+		""" See getBarycentricCoordinate.
 		"""
 		point_bbc = self.getBarycentricCoordinate(triangle, point)
 		for i in point_bbc:
@@ -433,10 +317,9 @@ class Triangulate(object):
 				return False
 		return True
 
+
 	def checkPointOn(self, triangle, point):
-		""" Using definition of Barycentric Coordinate System:
-			if at least one coordinate is 0 or 1 and the rest
-			in [0,1] then point is on border of triangle.
+		""" See getBarycentricCoordinate.
 		"""
 		point_bbc = self.getBarycentricCoordinate(triangle, point)
 		gate = False
@@ -447,11 +330,9 @@ class Triangulate(object):
 				gate = True
 		return True if gate else False
 
+
 	def triangulate(self):
-		""" Finds an ear, documents and removes vertice from polygon,
-			repeats until only a triangle is left and adds that to
-			triangulation.
-		"""
+
 		while self.polygon.vnumber > 3:
 			ear = self.findEar()
 			self.triangulation.append(ear[0])
@@ -466,16 +347,14 @@ class Triangulate(object):
 	########
 
 	def noConcaveIn(self, triangle):
-		""" Checks self.polygon.concave for intersecting points.
-		"""
 		for vertex_coord in self.polygon.concave:
 			if self.checkPointIn(triangle, vertex_coord):
 				return False
 		return True
 
+
 	def findEar(self):
-		""" Resets and populates self.convex/self.concave,
-			checks triangles where the ear-tip is a convex
+		""" Checks triangles where the ear-tip is a convex
 			vertex for intersection with any concave vert-
 			ices.  If no intersection returns that ear.
 		"""
@@ -507,11 +386,12 @@ class Triangulate(object):
 
 
 
+
 class LineIntersection(object):
 	""" Line Intersection Class. initiates with lines
 		[(x1,y1), (x2, y2)] to be converted to labeled
-		endpoints [(x,y), label].  Main test based for
-		general intersection uses sweep-line algorithm.
+		endpoints [(x,y), label].  Main test for gen.
+		line intersection uses sweep-line algorithm.
 	"""
 	def __init__(self, data):
 		self.count    = 0
@@ -520,17 +400,30 @@ class LineIntersection(object):
 		self.tested   = []
 		self.addLines(data)
 
+	################
+	#Data Properties
+	################
+
 	def addLine(self, line):
 		self.sweeps.append([line[0], str(self.count)])
 		self.sweeps.append([line[1], str(self.count)])
 		self.lines[str(self.count)] = line
 		self.count += 1
 
+
 	def addLines(self, array):
 		for line in array:
 			self.addLine(line)
 
-	def intersectTwoLines(self, lineA, lineB):
+
+	def sortSweeps(self):
+		self.sweeps.sort(key = lambda x: (x[0][0], not x[1]))
+
+	###################
+	#Line Intersections
+	###################
+
+	def intersectTwo(self, lineA, lineB):
 		""" It suffices to check if two points are on
 			opposite sides of a line segment.  To do
 			this we compute the cross products of
@@ -543,16 +436,14 @@ class LineIntersection(object):
 					 1.0*(lineA[1][1] - lineA[0][1])*(P[0] - lineA[1][0]))
 		xproductQ = (1.0*(lineA[1][0] - lineA[0][0])*(Q[1] - lineA[1][1]) -
 					 1.0*(lineA[1][1] - lineA[0][1])*(Q[0] - lineA[1][0]))
-
 		return True if xproductP * xproductQ < 0 else False
 
-	def sortSweeps(self):
-		self.sweeps.sort(key = lambda x: (x[0][0], not x[1]))
 
-	def checkSweep(self):
+	def checkIntersection(self):
 
 		if not self.sweeps:
 			return False
+
 		self.sortSweeps()
 		self.tested = []
 		events 	    = []
@@ -568,8 +459,8 @@ class LineIntersection(object):
 				for event in events:
 					if (event, newvalue) in self.tested:
 						continue
-					test = self.intersectTwoLines(self.lines[event],
-											   self.lines[newvalue])
+					test = self.intersectTwo(self.lines[event],
+										  self.lines[newvalue])
 					if test:
 						return True
 					else:
@@ -577,5 +468,24 @@ class LineIntersection(object):
 			i += 1
 		return False
 
+	##############
+	#Miscellaneous
+	##############
+
 	def __repr__(self):
 		return 'Line Intersection Class for lines %s' % self.lines
+
+
+
+
+###########
+#Test Cases
+###########
+
+X = [(0,0),(0,1),(2,1),(4,0),(2,-1)]
+PX = Polygon(X, True)
+TX = Triangulate(X)
+
+A = [(0,0),(1,1)]
+B = [(1,0),(0,1)]
+LI = LineIntersection([A,B])
