@@ -111,9 +111,9 @@ class Polygon(object):
 		assumptions made in node class regarding coordinates.
 		--Need to implement method for verifying simple poly.
 	"""
-	################
-	# Data Structure
-	################
+	#################
+	# Data Properties
+	#################
 
 	def __init__(self, data, CW_bool):
 
@@ -122,6 +122,7 @@ class Polygon(object):
 		self.vnumber = self.countVertices()
 		self.convex  = []
 		self.concave = []
+		self.sweep   = None
 
 		if CW_bool:
 			self.head = self.initDataCW(data)
@@ -187,9 +188,9 @@ class Polygon(object):
 	def countVertices(self):
 		return len(self.data)
 
-	#####################
-	#Polygon Line Segment
-	#####################
+	######################
+	#Polygon Line Segments
+	######################
 
 	def getSlope(self, vertexA, vertexB):
 		""" Slope between line-segment vertexA - vertexB
@@ -219,17 +220,14 @@ class Polygon(object):
 			second = first.next
 		return border
 
+	def lineIntersection(self, lineA, lineB):
+		""" Not implemented yet, line = [(x1, y1), (x2, y2)]
+		"""
+		return False
+
 	#############
 	#Polygon Area
 	#############
-
-	def SAHelper(self, vertexA, vertexB):
-		""" Used in centroid/signed area formulae:
-			returns + area => CCW cycling
-			returns - area => CW cycling
-		""" 
-		return 1.0*(vertexA.coord[0]*vertexB.coord[1] -
-					vertexB.coord[0]*vertexA.coord[1])
 
 	def getSignedAreaTotal(self):
 		""" Calculates total signed area of polygon.
@@ -301,6 +299,24 @@ class Polygon(object):
 		else:
 			return True if signed_area > 0 else False
 
+	def isConvexPolygon(self):
+
+		if not self.convex and not self.concave:
+			self.getConvexVertices()
+		return True if not self.concave else False
+
+	########
+	#Helpers
+	########
+
+	def SAHelper(self, vertexA, vertexB):
+		""" Used in centroid/signed area formulae:
+			returns + area => CCW cycling
+			returns - area => CW cycling
+		""" 
+		return 1.0*(vertexA.coord[0]*vertexB.coord[1] -
+					vertexB.coord[0]*vertexA.coord[1])
+
 	def getCVHelper(self, vertex):
 		""" Helper to getConvexVertices
 		"""
@@ -321,11 +337,37 @@ class Polygon(object):
 			self.getCVHelper(cursor)
 			cursor = cursor.next
 
-	def isConvexPolygon(self):
+	def labelSweepPoints(self):
 
-		if not self.convex and not self.concave:
-			self.getConvexVertices()
-		return True if not self.concave else False
+		first    	= 	self.head
+		second   	= 	first.next
+		sentinel 	= 	first
+		count       =	0
+		endpoints   =   []
+
+		start 		= Vector(first.coord)
+		start.label = str(count)
+		end 		= Vector(second.coord)
+		end.label 	= str(count)
+		endpoints.append(start)
+		endpoints.append(end)
+
+		first  = second
+		second = first.next
+		count += 1
+		while first != sentinel:
+
+			start 		= Vector(first.coord)
+			start.label = str(count)
+			end 		= Vector(second.coord)
+			end.label 	= str(count)
+			endpoints.append(start)
+			endpoints.append(end)
+
+			first  = second
+			second = first.next
+			count += 1
+		return endpoints
 
 	##############
 	#Miscellaneous
@@ -343,9 +385,12 @@ class Triangulate(object):
 			   send self.data, not polygon class.
 	"""
 	def __init__(self, data):
-
 		self.polygon = Polygon(data, True)
 		self.triangulation = []
+
+	######################
+	#Triangulation Methods
+	######################
 
 	def getTriangle(self, vertex):
 		""" Returns triangle as triplet of coordinates,
@@ -402,6 +447,24 @@ class Triangulate(object):
 				gate = True
 		return True if gate else False
 
+	def triangulate(self):
+		""" Finds an ear, documents and removes vertice from polygon,
+			repeats until only a triangle is left and adds that to
+			triangulation.
+		"""
+		while self.polygon.vnumber > 3:
+			ear = self.findEar()
+			self.triangulation.append(ear[0])
+			self.polygon.remove(ear[1])
+
+		finalear = self.findEar()
+		self.triangulation.append(finalear[0])
+		return self.triangulation
+
+	########
+	#Helpers
+	########
+
 	def noConcaveIn(self, triangle):
 		""" Checks self.polygon.concave for intersecting points.
 		"""
@@ -435,24 +498,73 @@ class Triangulate(object):
 			i += 1
 		raise Exception('Algorithm is bugged, this should not happen.')
 
-	def triangulate(self):
-		""" Finds an ear, documents and removes vertice from polygon,
-			repeats until only a triangle is left and adds that to
-			triangulation.
-		"""
-		while self.polygon.vnumber > 3:
-			ear = self.findEar()
-			self.triangulation.append(ear[0])
-			self.polygon.remove(ear[1])
-
-		finalear = self.findEar()
-		self.triangulation.append(finalear[0])
-		return self.triangulation
+	##############
+	#Miscellaneous
+	##############
 
 	def __repr__(self):
 		return 'Triangulation Class for %s' % self.polygon
 
 
+
+class LineIntersection(object):
+	""" Line Intersection Class. initiates with lines
+		[(x1,y1), (x2, y2)] to be converted to labeled
+		endpoints [(x,y), label].  Main test based for
+		general intersection uses sweep-line algorithm.
+	"""
+	def __init__(self, data):
+		self.count    = 0
+		self.lines    = {}
+		self.sweeps   = []
+		self.tested   = []
+		self.addLines(data)
+
+	def addLine(self, line):
+		self.sweeps.append([line[0], str(self.count)])
+		self.sweeps.append([line[1], str(self.count)])
+		self.lines[str(self.count)] = line
+		self.count += 1
+
+	def addLines(self, array):
+		for line in array:
+			self.addLine(line)
+
+	def intersectTwoLines(self, lineA, lineB):
+		""" Not implemented yet.
+		"""
+		return
+
+	def sortSweeps(self):
+		self.sweeps.sort(key = lambda x: (x[0][0], not x[1]))
+
+	def checkSweep(self):
+
+		if not self.sweeps:
+			return False
+		self.sortSweeps()
+		self.tested = []
+		events 	    = []
+		i 			= 0
+		while i < len(self.sweeps):
+			newvalue = self.sweeps[i][1]
+
+			if not events:
+				events.append(newvalue)
+			elif newvalue in events:
+				events.remove(newvalue)
+			else:
+				for event in events:
+					if (event, newvalue) in self.tested:
+						continue
+					test = self.intersectTwoLines(self.lines[event],
+											   self.lines[newvalue])
+					if test:
+						return True
+					else:
+						self.tested.append((event, newvalue))
+			i += 1
+		return False
 
 #####################################
 #Testing Parameters for a Unit Square
