@@ -1,39 +1,49 @@
-Geometry
+Plane Geometry
 ========
 
-(Simple) Polygon/Triangulation Classes for Python 2.7
+Basic Geometric Classes for Python 2.7
 
-Package includes Polygon Class and Triangulation Class.
-Both take lists of tuples as arguments.
+Package includes:
+Simple Polygon Class
+Triangulation Class
+General Line Intersection Class
+Vector Class
 
-Polygon Class:
 
-Able to initiate simple polygon in either CW or CCW orientation.
-Retains copy of list for search/remove functions.
-There is a need to implement a test for simplicity using line intersections.
+Simple Polygon Class:
 
-Currently available functions in Polygon:
+Initiate a simple polygon represented by a doubly linked list by a list of tuples.
+Polygon can be initiatated in either clockwise or counterclockwise orientation.
+Retains copy of original list of tuples for search/add/remove functions.
+
+Currently available functions for Polygon:
 
 initDataCW / initDataCCW
 clone
 search (vertex)
 remove (vertex)
 countVertices
-getSlope (vertexA, vertexB)
-getBorder - returns list of triples (vertexA, vertexB, slope) for each edge of polygon.
+getBorder - returns list of line segments [[(x1,y1),(x2,y2)]] representing polygon border.
 getSignedAreaTotal
 getAreaTotal
 getCentroid
 checkConvex (vertex)
-getConvexVertices
-isConvexPolygon
+isConvex
+isSimple (uses General Line Intersection Class)
+
+There is still a need to implement add vertex/move vertex.  These will require isSimple to work.
 
 
 Triangulation Class:
 
-Initiates a polygon using a list of tuples.
+Acts as a subclass of Polygon (Need to implement it like this, but I am still learning!)
+Initiated by a list of tuples, creates a Polygon using this list.
+After triangulation, polygon has been reduced to a triangle and is unable to be used as it was.
 
-Currently available functions in Triangulate:
+There is a need to avoid reducing the polygon, and a method for building the original polygon
+using triangles.
+
+Currently available functions for Triangulate:
 
 getTriangle - returns triplet of coordinates with the argument vertex as the 'ear-tip'.
 getTriangleNormals
@@ -41,4 +51,49 @@ getBarycentricCoordinate
 checkPointIn (triangle)
 checkPointOn (triangle)
 findEar
-triangulate - returns list of triangle triplets and reduces initiated polygon to a single triangle
+triangulate - returns list of triangle triplets while reducing initial polygon to a single triangle.
+
+
+General Line Intersection Class:
+
+Initiates with a list of line segments [[(x1,y1),(x2,y2)]], breaking them down into lists of
+endpoint and label [(x1,y1), 'n'] using a dictionary to keep track of them.
+This class uses a sweep-line method to determine whether any of the line segments intersect
+with eachother.  In the future finding specific intersections may be desired, but for now it is
+boolean.
+
+Currently available functions for LineIntersection:
+
+addLine
+addLines
+sortSweeps
+intersectTwo (lines)
+checkIntersection (all lines in class)
+
+
+Vector Class:
+
+Initiates with a n-tuple, Vector provides some basic tools for working with Euclidean vectors.
+There is a need to specify to what accuracy some of these calculations make, so that false
+positives do not occur.
+
+Currently available functions for Vector:
+
+dimension
+dotProduct
+crossProduct (3-dimensional)
+tripleProduct (3-dimensional)
+project
+normalize
+getAngle
+orthogonal
+collinear
+sum
+scale
+difference
+negate
+magnitude
+
+
+Any questions or comments do not hesitate to e-mail me at jonathan.melcher@gmail.com.
+I am a novice programmer learning the trade and would appreciate any advice or criticism.
