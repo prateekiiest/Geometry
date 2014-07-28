@@ -531,9 +531,20 @@ class LineIntersection(object):
 			self.addLine(line)
 
 	def intersectTwoLines(self, lineA, lineB):
-		""" Not implemented yet.
+		""" It suffices to check if two points are on
+			opposite sides of a line segment.  To do
+			this we compute the cross products of
+			lineA and the endpoints of lineB and take
+			their product.  The product will be negative
+			if and only if they intersect.
 		"""
-		return
+		P, Q 	  = lineB[0], lineB[1]
+		xproductP = (1.0*(lineA[1][0] - lineA[0][0])*(P[1] - lineA[1][1]) -
+					 1.0*(lineA[1][1] - lineA[0][1])*(P[0] - lineA[1][0]))
+		xproductQ = (1.0*(lineA[1][0] - lineA[0][0])*(Q[1] - lineA[1][1]) -
+					 1.0*(lineA[1][1] - lineA[0][1])*(Q[0] - lineA[1][0]))
+
+		return True if xproductP * xproductQ < 0 else False
 
 	def sortSweeps(self):
 		self.sweeps.sort(key = lambda x: (x[0][0], not x[1]))
@@ -566,10 +577,5 @@ class LineIntersection(object):
 			i += 1
 		return False
 
-#####################################
-#Testing Parameters for a Unit Square
-#####################################
-
-X = [(0,0), (0,1), (1,1), (1,0)]
-Square = Polygon(X, True)
-SquareT = Triangulate(X)
+	def __repr__(self):
+		return 'Line Intersection Class for lines %s' % self.lines
