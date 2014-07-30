@@ -1,7 +1,8 @@
-""" File for Geometry Classes
-	Including:
-	Polygon
+""" Geometry Package for Python 2.7
+	This file includes:
+	Polygon Class
 	Triangulation
+	Line Intersection
 """
 import math
 
@@ -20,6 +21,40 @@ class Node(object):
 	def __repr__(self):
 		return repr(self.coord)
 
+
+
+class GNode(object):
+
+	def __init__(self, value):
+
+		self.value = value
+		self.edges = []
+
+
+	def __repr__(self):
+		return repr(self.value)
+
+
+
+class Graph(object):
+
+	def __init__(self, nodes, edges, name):
+
+		self.nodes = self.initEdges(nodes, edges)
+		self.edges = edges
+		self.name = name
+
+
+	def initEdges(self, nodes, edges):
+		
+		for edge in edges:
+			nodes[edge[0]].edges.append(nodes[edge[1]])
+			nodes[edge[1]].edges.append(nodes[edge[0]])
+		return nodes
+
+
+	def __repr__(self):
+		return repr(self.name)
 
 
 
@@ -94,7 +129,46 @@ class Polygon(object):
 			self.head = cursor.next
 
 		self.data.remove(coordinate)
-		self.vnumber = self.countVertices()
+		self.vnumber -= 1
+
+	def insertVertex(self, insertpoint, coordinate):
+
+		if not self.search(insertpoint):
+			raise Exception('Point not in polygon')
+
+		cursor = self.head
+		while cursor.coord != insertpoint:
+			cursor = cursor.next
+
+		newpoint 					 = Node(coordinate)
+		newpoint.prev, newpoint.next = cursor.prev, cursor
+		cursor.prev.next 			 = newpoint
+		cursor.prev 	 			 = newpoint
+		n = self.data.index(cursor.coord)
+		self.data.insert(n, coordinate)
+		self.vnumber += 1
+
+		if not self.isSimple():
+			self.remove(coordinate)
+			raise Exception('Resultant polygon not simple')
+
+		if n == 0:
+			self.head = newpoint
+
+
+	def changeVertex(self, oldcoord, newcoord):
+
+		if not self.search(oldcoord):
+			raise Exception('Vertex not in polygon')
+
+		cursor = self.head
+		while cursor.coord != oldcoord:
+			cursor = cursor.next
+
+		cursor.coord = newcoord
+		if not self.isSimple():
+			cursor.coord = oldcoord
+			raise Exception('Resultant polygon not simple')
 
 
 	def countVertices(self):
@@ -124,6 +198,30 @@ class Polygon(object):
 			second = first.next
 		self.lines = lines
 		return lines
+
+
+	def getLength(self, segment):
+		""" Segment taken as [(x1,y1),(x2,y2)]
+		"""
+		return math.sqrt((segment[1][1]-segment[0][1])**2 + 
+						 (segment[1][0]-segment[0][0])**2)
+
+
+	def getPerimeter(self):
+
+		first = self.head
+		second = first.next
+		sentinel = first
+		lengths = []
+		lengths.append(self.getLength([first.coord, second.coord]))
+
+		first = second
+		second = first.next
+		while first != sentinel:
+			lengths.append(self.getLength([first.coord, second.coord]))
+			first = second
+			second = first.next
+		return sum(lengths)
 
 
 	def isSimple(self):
@@ -217,7 +315,7 @@ class Polygon(object):
 
 
 	def rotate(self, degrees):
-		""" Creates new Polygon() by rotating CCW.
+		""" Creates new Polygon by rotating CCW.
 		"""
 		centroid = self.getCentroid()
 		radians  = math.radians(degrees)
@@ -234,7 +332,7 @@ class Polygon(object):
 
 
 	def translate(self, translation):
-		""" Creates new Polygon() by translating.
+		""" Creates new Polygon by translating.
 		"""
 		newpoly  = []
 		first    = self.head
@@ -253,6 +351,7 @@ class Polygon(object):
 		"""
 		if scale == 0:
 			raise Exception('This would produce a degenerate polygon')
+
 		newpoly  = []
 		centroid = self.getCentroid()
 		first	 = self.head
