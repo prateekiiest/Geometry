@@ -251,15 +251,17 @@ class Polygon(object):
 	def scale(self, scale):
 		""" Creates new Polygon() by scaling.
 		"""
+		if scale == 0:
+			raise Exception('This would produce a degenerate polygon')
 		newpoly  = []
 		centroid = self.getCentroid()
 		first	 = self.head
 		sentinel = first
 
-		newpoly.append(self.scaleVertex(first, centroid, scale))
+		newpoly.append(self.scaleVertex(first, centroid, abs(scale)))
 		first = first.next
 		while first != sentinel:
-			newpoly.append(self.scaleVertex(first, centroid, scale))
+			newpoly.append(self.scaleVertex(first, centroid, abs(scale)))
 			first = first.next
 		return Polygon(newpoly, self.CW)
 
@@ -272,7 +274,7 @@ class Polygon(object):
 			from specified point.
 		"""
 		x = vertex.coord[0] - point[0]
-		y = vertex.coord[0] - point[1]
+		y = vertex.coord[1] - point[1]
 		return (x*scale + point[0], y*scale + point[1])
 
 
