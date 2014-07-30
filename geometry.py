@@ -6,12 +6,12 @@
 import math
 
 
+
+
 class Node(object):
-	""" Node Class:
-		Used to represent vertices of simple polygon using a
-		doubly linked list.
-	"""
+
 	def __init__(self, coordinate):
+
 		self.coord = coordinate
 		self.next  = None
 		self.prev  = None
@@ -24,13 +24,11 @@ class Node(object):
 
 
 class Polygon(object):
-	""" Polygon Class:
-		Converts list of coordinates into list of nodes given
-		assumptions made in node class regarding coordinates.
-	"""
-	#################
-	# Data Properties
-	#################
+	'Polygon Class using doubly linked lists for vertices'
+
+	################
+	#Data Properties
+	################
 
 	def __init__(self, data, CW_bool):
 
@@ -39,7 +37,7 @@ class Polygon(object):
 		self.vnumber = self.countVertices()
 		self.convex  = []
 		self.concave = []
-		self.sweep   = None
+		self.lines   = None
 
 		if CW_bool:
 			self.head = self.initDataCW(data)
@@ -124,14 +122,15 @@ class Polygon(object):
 			lines.append([first.coord, second.coord])
 			first  = second
 			second = first.next
-		return border
+		self.lines = lines
+		return lines
 
 
 	def isSimple(self):
 		""" See Line Intersection Class for details.
 		"""
 		LI = LineIntersection(self.getEdges())
-		return LI.checkIntersection()
+		return not LI.checkIntersection()
 
 	##############
 	#Polygon Areas
@@ -216,9 +215,86 @@ class Polygon(object):
 			self.getConvexVertices()
 		return True if not self.concave else False
 
-	########
-	#Helpers
-	########
+
+	def rotate(self, degrees):
+		""" Creates new Polygon() by rotating CCW.
+		"""
+		centroid = self.getCentroid()
+		radians  = math.radians(degrees)
+		newpoly  = []
+		first    = self.head
+		sentinel = first
+		
+		newpoly.append(self.rotateVertex(first, centroid, radians))
+		first = first.next
+		while first != sentinel:
+			newpoly.append(self.rotateVertex(first, centroid, radians))
+			first = first.next
+		return Polygon(newpoly, self.CW)
+
+
+	def translate(self, translation):
+		""" Creates new Polygon() by translating.
+		"""
+		newpoly  = []
+		first    = self.head
+		sentinel = first
+		
+		newpoly.append(self.translateVertex(first, translation))
+		first = first.next
+		while first != sentinel:
+			newpoly.append(self.translateVertex(first, translation))
+			first = first.next
+		return Polygon(newpoly, self.CW)
+
+
+	def scale(self, scale):
+		""" Creates new Polygon() by scaling.
+		"""
+		newpoly  = []
+		centroid = self.getCentroid()
+		first	 = self.head
+		sentinel = first
+
+		newpoly.append(self.scaleVertex(first, centroid, scale))
+		first = first.next
+		while first != sentinel:
+			newpoly.append(self.scaleVertex(first, centroid, scale))
+			first = first.next
+		return Polygon(newpoly, self.CW)
+
+	##############
+	#Miscellaneous
+	##############
+
+	def scaleVertex(self, vertex, point, scale):
+		""" Returns new vertex coordinate by scaling
+			from specified point.
+		"""
+		x = vertex.coord[0] - point[0]
+		y = vertex.coord[0] - point[1]
+		return (x*scale + point[0], y*scale + point[1])
+
+
+	def rotateVertex(self, vertex, point, radians):
+		""" Returns new vertex coordinate by rotating CCW
+			about specified point.
+		"""
+		x = vertex.coord[0] - point[0]
+		y = vertex.coord[1] - point[1]
+		rotated_x = math.cos(radians)*x - math.sin(radians)*y
+		rotated_y = math.sin(radians)*x + math.cos(radians)*y
+		return (rotated_x + point[0], rotated_y + point[1])
+
+
+	def translateVertex(self, vertex, translation):
+		""" Returns new vertex coordinate according to 
+			translation vector.
+		"""
+		moved_x = vertex.coord[0] + translation[0]
+		moved_y = vertex.coord[1] + translation[1]
+		return (moved_x, moved_y)
+
 
 	def SAHelper(self, vertexA, vertexB):
 		""" Used in centroid/signed area formulae:
@@ -251,9 +327,6 @@ class Polygon(object):
 			self.getCVHelper(cursor)
 			cursor = cursor.next
 
-	##############
-	#Miscellaneous
-	##############
 
 	def __repr__(self):
 		return '%s-gon at %s' % (self.vnumber, self.head)
@@ -268,12 +341,13 @@ class Triangulate(object):
 			   use initial polygon after triangulation.
 	"""
 	def __init__(self, data):
+
 		self.polygon = Polygon(data, True)
 		self.triangulation = []
 
-	######################
-	#Triangulation Methods
-	######################
+	#########################
+	#Triangulation Properties
+	#########################
 
 	def getTriangle(self, vertex):
 		""" Returns triangle as triplet of coordinates,
@@ -342,9 +416,9 @@ class Triangulate(object):
 		self.triangulation.append(finalear[0])
 		return self.triangulation
 
-	########
-	#Helpers
-	########
+	##############
+	#Miscellaneous
+	##############
 
 	def noConcaveIn(self, triangle):
 		for vertex_coord in self.polygon.concave:
@@ -377,9 +451,6 @@ class Triangulate(object):
 			i += 1
 		raise Exception('Algorithm is bugged, this should not happen.')
 
-	##############
-	#Miscellaneous
-	##############
 
 	def __repr__(self):
 		return 'Triangulation Class for %s' % self.polygon
@@ -393,16 +464,18 @@ class LineIntersection(object):
 		endpoints [(x,y), label].  Main test for gen.
 		line intersection uses sweep-line algorithm.
 	"""
+	################
+	#Data Properties
+	################
+
 	def __init__(self, data):
+
 		self.count    = 0
 		self.lines    = {}
 		self.sweeps   = []
 		self.tested   = []
 		self.addLines(data)
 
-	################
-	#Data Properties
-	################
 
 	def addLine(self, line):
 		self.sweeps.append([line[0], str(self.count)])
@@ -482,10 +555,13 @@ class LineIntersection(object):
 #Test Cases
 ###########
 
-X = [(0,0),(0,1),(2,1),(4,0),(2,-1)]
+X = [(0,0),(0,1),(1,1),(1,0)]
 PX = Polygon(X, True)
 TX = Triangulate(X)
 
-A = [(0,0),(1,1)]
-B = [(1,0),(0,1)]
-LI = LineIntersection([A,B])
+A = [(0,0),(0,1)]
+B = [(0,1),(1,1)]
+C = [(1,1),(1,0)]
+D = [(1,0),(0,0)]
+
+LI = LineIntersection([A,B,C,D])
