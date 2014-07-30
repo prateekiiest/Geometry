@@ -27,6 +27,9 @@ getBorder - returns list of line segments [[(x1,y1),(x2,y2)]] representing polyg
 getSignedAreaTotal
 getAreaTotal
 getCentroid
+scale - returns new polygon
+rotate - returns new polygon
+translate - returns new polygon
 checkConvex (vertex)
 isConvex
 isSimple (uses General Line Intersection Class)
