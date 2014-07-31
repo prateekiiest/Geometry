@@ -38,19 +38,12 @@ class GNode(object):
 
 class Graph(object):
 
-	def __init__(self, nodes, edges, name):
+	def __init__(self, edges, name):
 
-		self.nodes = self.initEdges(nodes, edges)
-		self.edges = edges
 		self.name = name
-
-
-	def initEdges(self, nodes, edges):
-		
-		for edge in edges:
-			nodes[edge[0]].edges.append(nodes[edge[1]])
-			nodes[edge[1]].edges.append(nodes[edge[0]])
-		return nodes
+		self.edges = edges
+		self.nodes = {}
+		self.count = 0
 
 
 	def __repr__(self):
@@ -179,9 +172,8 @@ class Polygon(object):
 	######################
 
 	def getEdges(self):
-		""" Calculates slopes between each line-segment
-			along border in current orientation and
-			returns as list of triples.
+		""" Returns list of line-segments in form
+			[(x1, y1), (x2, y2)].
 		"""
 		first    	= 	self.head
 		second   	= 	first.next
@@ -201,8 +193,6 @@ class Polygon(object):
 
 
 	def getLength(self, segment):
-		""" Segment taken as [(x1,y1),(x2,y2)]
-		"""
 		return math.sqrt((segment[1][1]-segment[0][1])**2 + 
 						 (segment[1][0]-segment[0][0])**2)
 
@@ -504,6 +494,18 @@ class Triangulate(object):
 			if i == 0 or i == 1:
 				gate = True
 		return True if gate else False
+
+
+	def shareEdge(self, triangleA, triangleB):
+
+		polyA = Polygon(triangleA, True).getEdges()
+		polyB = Polygon(triangleB, True).getEdges()
+
+		for a in polyA:
+			for b in polyB:
+				if a == b or a == [b[1],b[0]]:
+					return True
+		return False
 
 
 	def triangulate(self):
