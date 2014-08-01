@@ -36,18 +36,21 @@ class GNode(object):
 
 
 
-class Graph(object):
+class DualGraph(object):
 
-	def __init__(self, edges, name):
+	def __init__(self, nodes, edges):
 
-		self.name = name
+		self.nodes = nodes
 		self.edges = edges
-		self.nodes = {}
-		self.count = 0
+
+
+	def getBorder(self):
+		return ([node.value for node in self.nodes
+					if len(node.edges) in [1, 2]])
 
 
 	def __repr__(self):
-		return repr(self.name)
+		return 'Graph with %s nodes.' % len(self.nodes)
 
 
 
@@ -212,6 +215,18 @@ class Polygon(object):
 			first = second
 			second = first.next
 		return sum(lengths)
+
+
+	def shareEdge(self, other):
+
+		edgesA = self.getEdges()
+		edgesB = other.getEdges()
+
+		for a in edgesA:
+			for b in edgesB:
+				if a == b or a == [b[1],b[0]]:
+					return True
+		return False
 
 
 	def isSimple(self):
@@ -433,8 +448,11 @@ class Triangulate(object):
 	"""
 	def __init__(self, data):
 
-		self.polygon = Polygon(data, True)
+		self.data 		   = data
+		self.polygon 	   = Polygon(data, True)
 		self.triangulation = []
+		self.dualgraph 	   = None
+		self.gate  		   = False
 
 	#########################
 	#Triangulation Properties
@@ -510,6 +528,9 @@ class Triangulate(object):
 
 	def triangulate(self):
 
+		if self.gate:
+			raise Exception('Already triangulated.')
+
 		while self.polygon.vnumber > 3:
 			ear = self.findEar()
 			self.triangulation.append(ear[0])
@@ -517,8 +538,14 @@ class Triangulate(object):
 
 		finalear = self.findEar()
 		self.triangulation.append(finalear[0])
+		self.gate = True
+
 		return self.triangulation
 
+
+	def getPolygon(self):
+		return Polygon(self.data)
+		
 	##############
 	#Miscellaneous
 	##############
@@ -555,8 +582,33 @@ class Triangulate(object):
 		raise Exception('Algorithm is bugged, this should not happen.')
 
 
+	def getDualGraph(self):
+
+		if not self.gate:
+			self.triangulate()
+
+		nodes = [GNode(triangle) for triangle in self.triangulation]
+		edges = []
+
+		for nodeA in nodes:
+			edgeA = nodes.index(nodeA)
+			for nodeB in nodes:
+				edgeB = nodes.index(nodeB)
+				if nodeA == nodeB:
+					continue
+				if self.shareEdge(nodeA.value, nodeB.value) and (
+								(edgeA, edgeB) not in edges and
+								(edgeB, edgeA) not in edges     ):
+
+					nodeA.edges.append(nodeB)
+					nodeB.edges.append(nodeA)
+					edges.append((edgeA, edgeB))
+
+		self.dualgraph = DualGraph(nodes, edges)
+
+
 	def __repr__(self):
-		return 'Triangulation Class for %s' % self.polygon
+		return 'Triangulation Class'
 
 
 
