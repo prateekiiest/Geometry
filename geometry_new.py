@@ -6,7 +6,6 @@ Things to do:
 re-write is_simple in SimplePolygon
 """
 
-"""Subclassing Vertice"""
 class Vertice(object):
 
     def __init__(self, coordinate):
@@ -23,7 +22,7 @@ Polygon class
 """
 class SimplePolygon(object):
 
-    """Initialization of Polygon instance"""
+    """Initialization of Polygon instance """
     def __init__(self, coordinates, orientation_bool):
         """
         orientation_bool is true for clockwise, false for ccw.
@@ -111,7 +110,7 @@ class SimplePolygon(object):
         """ Dealing with case where removed vertice was self.head """
         if cursor == self.head:
             self.head = cursor.next
-        """ Tidying up and updating polygon attributes"""
+        """ Tidying up and updating polygon attributes """
         cursor = None
         self.data.remove(vertice_coord)
         self.vertex_number -= 1
@@ -141,7 +140,7 @@ class SimplePolygon(object):
         new_vertice.prev, new_vertice.next = cursor.prev, cursor
         cursor.prev.next                   = new_vertice
         cursor.prev                        = new_vertice
-        """ Updating polygon data"""
+        """ Updating polygon data """
         cursor_index = self.coordinates.index(cursor.coord)
         self.coordinates.insert(cursor_index, vertice_coord)
         self.vertex_number += 1
@@ -164,11 +163,11 @@ class SimplePolygon(object):
         """
         if not self.coordinate_in_polygon(old_coord):
             raise Exception('Vertice not in polygon')
-        """ Traversal"""
+        """ Traversal """
         cursor = self.head
         while cursor.coord != old_coord:
             cursor = cursor.next
-        """ Updating coordinates"""
+        """ Updating coordinates """
         cursor.coord    = new_coord
         old_coord_index = self.coordinates.index(old_coord)
         self.coordinates[old_coord_index] = new_coord
@@ -178,3 +177,103 @@ class SimplePolygon(object):
             self.coordinates[old_coord_index] = old_coord
             raise Exception('Resultant polygon is not simple')
         return
+
+    """
+    The following methods have to do with treating the edges of the
+    polygon as line segments.
+    """
+
+    def get_edges():
+        """
+        Returns list of line segments in the form [(x1,y1), (x2,y2)].
+        Traverses through linked list, adding line segments until
+        reaching sentinel vertice.
+        """
+        first_vertice  = self.head
+        second_vertice = self.head.next
+        sentinel       = first_vertice
+        line_segments  = []
+        """ Initial line is added """
+        line_segments.append([first_vertice.coord, second_vertice.coord])
+
+        first_vertice  = second_vertice
+        second_vertice = first_vertice.next
+        """ Start of traversal """
+        while first_vertice != sentinel:
+            line_segments.append([first_vertice.coord, second_vertice.coord])
+            first_vertice  = second_vertice
+            second_vertice = first_vertice.next
+        """ Assigning list of line segments to polygon attributes """
+        self.line_segments = line_segments
+        """
+        List is used later for determining if any lines intersect
+        and so is returned.
+        """
+        return line_segments
+
+
+    def get_length(self, line_segment):
+        """
+        Pythagorean formula is used.  Should add something to
+        deal with inaccuracy later.
+        """
+        return math.sqrt((line_segment[1][1]-line_segment[0][1])**2 +
+                         (line_segment[1][0]-line_segment[0][0])**2)
+
+
+    def get_perimeter(self):
+        """
+        Traverses identically to in get_edges().  Piggybacks get_length
+        while doing so and returns sum of lengths.
+        """
+        first_vertice = self.head
+        second_vertice = first_vertice.next
+        sentinel = first_vertice
+
+        segment_lengths = []
+        segment_lengths.append(self.get_length(
+                          [first_vertice.coord,
+                          second_vertice.coord]))
+
+        first_vertice  = second_vertice
+        second_vertice = first_vertice.next
+        """ Start of traversal """
+        while first_vertice != sentinel:
+            segment_lengths.append(self.get_length(
+                              [first_vertice.coord,
+                              second_vertice.coord]))
+            first_vertice  = second_vertice
+            second_vertice = first_vertice.next
+        return sum(segment_lengths)
+
+
+    def share_edge(self, other):
+        """
+        Method for determining whether two polygons share
+        a particular edge.  Brute force, need to look up
+        a nicer way to do this.
+        """
+        edges_self = self.get_edges()
+        edges_othr = other.get_edges()
+
+        for slf in edges_self:
+            for otr in edges_othr:
+                if slf == otr or slf == [otr[1], otr[0]]:
+                    return True
+        return False
+
+
+    def is_simple(self):
+        """
+        See Line Intersection Class for details.
+        """
+        """
+        Disabled until code is fixed up, simply returns True.
+        """
+        LineIntrsct = LineIntersection(self.get_edges())
+        return True #not LineIntrsct.check_intersection()
+
+    """
+    The following methods have to do with the area of the
+    simple polygon.
+    """
