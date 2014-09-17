@@ -277,3 +277,150 @@ class SimplePolygon(object):
     The following methods have to do with the area of the
     simple polygon.
     """
+
+    def total_signed_area(self):
+        """
+        Calculates total signed area of polygon.
+        Will be negative if oriented clockwise, and positive if ccw.
+        Traverses polygon as in get_edges, calculating what it needs
+        from each vertice.  In this case, the signed area A can be
+        written as:
+        A = (1/2)(x_1y_2 - x_2y_1 + x_2y_3 - x_3y_2+...+x_ny_1-x_1y_n)
+        Which by grouping the data we can see that we can calculate each
+        term cycling through the polygon vertices.
+        """
+        first_vertice     = self.head
+        second_vertice    = first.next
+        sentinel          = first_vertice
+
+        """ Formula to calculate each partial area as mentioned above """
+        partial_area_calc = lambda x: 1.0*(x[0].coord[0]*x[1].coord[1] -
+                                           x[1].coord[0]*x[0].coord[1])
+
+        area              = partial_area_calc([first_vertice, second_vertice])
+        first_vertice     = second_vertice
+        second_vertice    = first_vertice.next
+
+        while first_vertice != sentinel:
+            area += partial_area_calc([first_vertice, second_vertice])
+            first_vertice  = second_vertice
+            second_vertice = first_vertice.next
+
+        return 0.5*area
+
+
+    def total_area(self):
+        """
+        Calculates total absolute area of polygon.
+        It is the invariant from the signed area.
+        """
+        return abs(self.total_signed_area())
+
+    """
+    The following methods have to do with the
+    properties of the simple polygon.
+    """
+
+    def centroid(self):
+        """
+        Calculates centroid based on formulae found at
+        http://en.wikipedia.org/wiki/Centroid
+        Again, we traverse through the polygon as before
+        with a sentinel, and make calculations at each
+        point in order to combine them to find the centroid,
+        which ends up being a sort of weighted average of each
+        of the calculations (see the wiki).
+        """
+        signed_area    = self.total_signed_area()
+        first_vertice  = self.head
+        second_vertice = first_vertice.next
+        sentinel       = first_vertice
+        helper_fn      = lambda x: 1.0*(x[0].coord[0]*x[1].coord[1] -
+                                        x[1].coord[0]*x[0].coord[1])
+        """ First calculations: """
+        centroid_x = (1.0*(first_vertice.coord[0] + second_vertice.coord[0]) *
+                                  helper_fn([first_vertice, second_vertice]))
+        centroid_y = (1.0*(first_vertice.coord[1] + second_vertice.coord[1]) *
+                                  helper_fn([first_vertice, second_vertice]))
+
+        first_vertice  = second_vertice
+        second_vertice = first_vertice.next
+        """ Traversal """
+        while first_vertice != sentinel:
+            centroid_x += (1.0*(first_vertice.coord[0] + second_vertice.coord[0]) *
+                                       helper_fn([first_vertice, second_vertice]))
+            centroid_y += (1.0*(first_vertice.coord[1] + second_vertice.coord[1]) *
+                                       helper_fn([first_vertice, second_vertice]))
+            first_vertice  = second_vertice
+            second_vertice = first_vertice.next
+
+        return ((1/(6*signed_area))*centroid_x, (1/(6*signed_area))*centroid_y)
+
+    def vertice_is_convex(self, vertice):
+
+        """
+        Checks if angle made by vertex.prev - vertex - vertex.next
+        is convex relative to polygon.  Uses sign of triple product
+        of vectors which gives orientation.  CCW = +, CW = -.
+        If same orientation as cycling then convex, else concave.
+        eg. If vertices are cycling clockwise and signed_area is
+        negative then returns True.  Signed_area = 0 happens when
+        triangle is degenerate.  For more information look up
+        triple products and signed areas of polygons.
+        This calculates the signed area of the triangle created by
+        the above sequence, and checks if it matches the orientation
+        of the polygon.
+        """
+        """
+        We will use x, y, z as variables for space issues. They
+        correspond to the coordinates of the previous, vertice_to_test,
+        and the next vertice respectively.
+        """
+        x = vertice.prev.coord
+        y = vertice.coord
+        z = vertice.next.coord
+
+        signed_area = (x[0]*y[1] + y[0]*z[1] + z[0]*x[1] -
+                       y[0]*x[1] - z[0]*y[1] - x[0]*z[1])
+
+        if self.orientation:
+            return True if signed_area < 0 else False
+        else:
+            return True if signed_area > 0 else False
+
+
+    def polygon_is_convex(self):
+        """ Applies all_convex_vertices and analyzes """
+        self.all_convex_vertices()
+        return True if not self.concave else False
+
+
+    def all_convex_vertices(self):
+        """
+        Traverses through polygon using sentinel, applying vertice_is_convex
+        to each vertice.
+        """
+        """ Resetting self.convex/concave """
+        self.convex = self.concave = []
+
+        cursor = self.head
+        sentinel = cursor
+
+        if self.vertice_is_convex(cursor):
+            self.convex.append(cursor.coord)
+        else:
+            self.concave.append(cursor.coord)
+
+        cursor = cursor.next
+        while cursor != sentinel:
+
+            if self.vertice_is_convex(cursor):
+                self.convex.append(cursor.coord)
+            else:
+                self.concave.append(cursor.coord)
+
+            cursor = cursor.next
+
+
+    def __repr__(self):
+        return '%s-gon at %s' % (self.vertex_number, self.head)
