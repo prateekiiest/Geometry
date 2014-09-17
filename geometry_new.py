@@ -3,7 +3,9 @@ Geometry Module for Python 2.7
 
 Things to do:
 
-re-write is_simple in SimplePolygon
+rewrite and comment/document Polygon Class
+add unit tests for Polygon class
+re-write is_simple in SimplePolygon - much later
 """
 
 class Vertice(object):
@@ -20,6 +22,7 @@ class Vertice(object):
 Polygon class
 - using doubly linked lists for vertices
 """
+
 class SimplePolygon(object):
 
     """Initialization of Polygon instance """
