@@ -78,9 +78,13 @@ class SimplePolygon(object):
         This is the meat behind initializing the Polygon Class.
         Note: you can also re-orientate the polygon using this.
         """
+        """ Some Exception handling for initialization is done here. """
+        if len(coordinates) < 3:
+            raise ValueError('Polygons require at least 3 vertices.')
+
         for coord in coordinates:
             if coordinates.count(coord) != 1:
-                raise Exception('Multiple vertices at same location')
+                raise ValueError('Multiple vertices at same location')
 
         vertices   = [Vertice(coord) for coord in coordinates]
         poly_sides = len(vertices)
