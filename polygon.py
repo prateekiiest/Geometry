@@ -35,6 +35,13 @@ Polygon class
 class SimplePolygon(object):
 
     """Initialization of Polygon instance """
+    """
+    Warning:    all coordinates are assumed to be (x,y)
+                Cartesian tuples.  (0,0) is taken to be
+                the origin, so coordinates are NOT in
+                line with computer coordinate standards
+                of starting at the top left of the screen
+    """
     def __init__(self, coordinates, orientation_bool):
         """
         orientation_bool is true for clockwise, false for ccw.
