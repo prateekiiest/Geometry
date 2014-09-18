@@ -78,6 +78,10 @@ class SimplePolygon(object):
         This is the meat behind initializing the Polygon Class.
         Note: you can also re-orientate the polygon using this.
         """
+        for coord in coordinates:
+            if coordinates.count(coord) != 1:
+                raise Exception('Multiple vertices at same location')
+
         vertices   = [Vertice(coord) for coord in coordinates]
         poly_sides = len(vertices)
         orient_var = 1 if clockwise else -1
@@ -131,7 +135,7 @@ class SimplePolygon(object):
             self.head = cursor.next
         """ Tidying up and updating polygon attributes """
         cursor = None
-        self.data.remove(vertice_coord)
+        self.coordinates.remove(vertice_coord)
         self.vertex_number -= 1
         return
 
