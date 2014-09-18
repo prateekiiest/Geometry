@@ -73,15 +73,18 @@ class SimplePolygon(object):
         """
         This method creates a list of vertices with data from
         coordinates.  It then iterates over the list assigning
-        pointers to the appropriate vertices (clockwise = next).
+        pointers to the appropriate vertices (clockwise = next),
+        finally returning the head of the polygon linked list.
+        This is the meat behind initializing the Polygon Class.
+        Note: you can also re-orientate the polygon using this.
         """
         vertices   = [Vertice(coord) for coord in coordinates]
         poly_sides = len(vertices)
         orient_var = 1 if clockwise else -1
 
         for i in xrange(poly_sides):
-            vertices[i % polysides].prev = vertices[(i-orient_var) % polysides]
-            vertices[i % polysides].next = vertices[(i+orient_var) % polysides]
+            vertices[i % poly_sides].prev = vertices[(i-orient_var) % poly_sides]
+            vertices[i % poly_sides].next = vertices[(i+orient_var) % poly_sides]
         """
         self.orientation is set to clockwise argument and self.head
         becomes the first vertice in the list.
@@ -343,11 +346,11 @@ class SimplePolygon(object):
             if self.orientation:
                 new_coords.append(
                     self.scale_vertice_from_point(
-                        first_vertice, centroid, abs(scale))))
+                        first_vertice, centroid, abs(scale)))
             else:
                 new_coords.insert(
                     0, self.scale_vertice_from_point(
-                        first_vertice, centroid, abs(scale))))
+                        first_vertice, centroid, abs(scale)))
             first_vertice = first_vertice.next
 
         return Polygon(new_coords, clockwise)
