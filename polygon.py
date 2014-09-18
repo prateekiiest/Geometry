@@ -1,12 +1,21 @@
 """
-Geometry Module for Python 2.7
+Polygon Module for Geometry Package
 
 Things to do:
 
-rewrite and comment/document Polygon Class
 add unit tests for Polygon class
 re-write is_simple in SimplePolygon - much later
+
+rewrite rotate, translate, scale, scaleVertex, rotateVertex - finished
+translateVertex and Polygon is complete - finishes
+rewrite and comment/document Polygon Class - finished
 """
+import math
+
+#import triangulate
+#import line_intersection
+
+
 
 class Vertice(object):
 
@@ -55,6 +64,10 @@ class SimplePolygon(object):
         else:
             self.head = self.orientate(coordinates, False)
 
+    """
+    The following are methods for working with the vertices of
+    the polygon object.
+    """
 
     def orientate(self, coordinates, clockwise = True):
         """
@@ -92,10 +105,10 @@ class SimplePolygon(object):
         - polygon has 3 sides (2 sides is not a polygon)
         """
         if not self.coordinate_in_polygon(vertice_coord):
-            raise Exception('Vertice not in polygon')
+            raise ValueError('Vertice not in polygon')
 
         elif self.vertex_number == 3:
-            raise Exception('Simple polygon must have three vertices')
+            raise ValueError('Simple polygon must have three vertices')
 
         """
         Removing vertice makes use of a cursor.  Initializing cursor at
@@ -130,10 +143,10 @@ class SimplePolygon(object):
         self.remove_vertice immediately.
         """
         if not self.coordinate_in_polygon(insertion_point):
-            raise Exception('Insertion point not in polygon')
+            raise ValueError('Insertion point not in polygon')
         """
         Should refactor this into another function, it is repeatedly
-        occuring.
+        occuring:
         """
         cursor = self.head
         while cursor.coord != insertion_point:
@@ -150,14 +163,14 @@ class SimplePolygon(object):
         """ Checking if polygon remains simple """
         if not self.is_simple():
             self.remove(vertice_coord)
-            raise Exception('Resultant polygon is not simple')
+            raise ValueError('Resultant polygon is not simple')
         """ Addressing case where cursor was self.head """
         if not cursor_index:
             self.head = new_vertice
         return
 
 
-    def move_vertex(self, old_coord, new_coord):
+    def move_vertice(self, old_coord, new_coord):
         """
         Identical traversal as insert/remove_vertice.  Locates vertex,
         and updates its coordinate and self.coordinates.  It then checks
@@ -165,7 +178,7 @@ class SimplePolygon(object):
         exception.
         """
         if not self.coordinate_in_polygon(old_coord):
-            raise Exception('Vertice not in polygon')
+            raise ValueError('Vertice not in polygon')
         """ Traversal """
         cursor = self.head
         while cursor.coord != old_coord:
@@ -178,9 +191,166 @@ class SimplePolygon(object):
         if not self.is_simple():
             cursor.coord = old_coord
             self.coordinates[old_coord_index] = old_coord
-            raise Exception('Resultant polygon is not simple')
+            raise ValueError('Resultant polygon is not simple')
         return
 
+
+    def update_vertice(self, old_coord, new_coord):
+        """
+        Search for vertice in polygon, then updates it, checks if
+        resultant polygon is still simple.  If not, reverts and
+        raises ValueError.
+        """
+        if not self.coordinate_in_polygon(old_coord):
+            raise ValueError('Vertice not in polygon')
+
+        cursor = self.head
+        """ Finding vertice to update """
+        while cursor.coord != coord:
+            cursor = cursor.next
+
+        """ Updating and reverting if not simple """
+        cursor.coord = new_coord
+        if not self.is_simple():
+            cursor.coord = old_coord
+            raise ValueError('Resultant polygon is not simple')
+
+
+    def scale_vertice_from_point(self, vertice, point, scale):
+        """
+        Returns cartesian coordinate tuple resulting from scaling
+        a vertice away from a point given a scale.  This is useful
+        when the polygon centroid is not 0, as the vertice will need
+        to scale away from the centroid instead of (0,0).  This is
+        ultimately used in scaling an entire polygon.  This will be
+        done by moving the point over so that the centroid would be
+        (0,0), scaling, then bringing it back.
+        """
+        x = vertice.coord[0] - point[0]
+        y = vertice.coord[1] - point[1]
+        return (x*scale + point[0], y*scale + point[1])
+
+
+    def rotate_vertice_about_point(self, vertice, point, radians):
+        """
+        Similar idea to scale_vertice_from_point, except now we take
+        an amount to rotate in radians instead of a scale, and apply
+        it to the vertice relocated so that the point is at (0,0).
+        Ultimately used as a helper function for rotating a polygon.
+        """
+        x = vertice.coord[0] - point[0]
+        y = vertice.coord[1] - point[1]
+        x_rotated = math.cos(radians)*x - math.sin(radians)*y
+        y_rotated = math.sin(radians)*x + math.cos(radians)*y
+        return (x_rotated + point[0], y_rotated + point[1])
+
+
+    def translate_vertice(self, vertice, translation_vector):
+        """
+        Returns new cartesian coordinate tuple by calculating
+        changes to vertice done by translation_vector.
+        """
+        x_translated = vertice.coord[0] + translation[0]
+        y_translated = vertice.coord[1] + translation[1]
+        return (x_translated, y_translated)
+
+    """
+    The following methods are for changing the polygon as a whole.
+    """
+
+    def rotate_polygon(self, angle, radians = False, clockwise = False):
+        """
+        Rotates polygon by angle argument.  Should make it possible
+        to input radians instead.  This works by applying the rotation
+        to each coordinate and initializing a new polygon class to return.
+        """
+        new_coords    = []
+        centroid      = self.centroid()
+        angle         = math.radians(angle) if not radians else angle
+        first_vertice = self.head
+        sentinel      = first_vertice
+
+        new_coords.append(
+            self.rotate_vertice_about_point(first_vertice, centroid, angle))
+
+        """ Traversal """
+        first_vertice = first_vertice.next
+        while first.vertice != sentinel:
+            """
+            If oriented CCW then add in before previous coordinate.
+            Initialization list must be in clockwise order.
+            """
+            if self.orientation:
+                new_coords.append(self.rotate_vertice_about_point(
+                                   first_vertice, centroid, angle))
+            else:
+                new_coords.insert(0, self.rotate_vertice_about_point(
+                                      first_vertice, centroid, angle))
+            first_vertice = first_vertice.next
+
+        return Polygon(new_coords, clockwise)
+
+
+    def translate_polygon(self, translation, clockwise = False):
+        """
+        Follows similar form to rotate_polygon.  Traverses polygon
+        and creates new initialization list by translating each
+        coordinate.  It then uses this list to return a new polygon.
+        """
+        new_coords = []
+        first_vertice = self.head
+        sentinel = first
+
+        new_coords.append(
+            self.translate_vertice(first_vertice, translation))
+        """ Traversal """
+        first_vertice = first_vertice.next
+        while first_vertice != sentinel:
+            if self.orientation:
+                new_coords.append(
+                    self.translate_vertice(first_vertice, translation))
+            else:
+                new_coords.insert(0, self.translate_vertice(
+                                 first_vertice, translation))
+            first_vertice = first.next
+
+        return Polygon(new_coords, clockwise)
+
+
+    def scale_polygon(self, scale, clockwise = False):
+        """
+        Similar to translate_polygon, traverses polygon creating a
+        new coordinate list to initialize a scaled polygon.
+        """
+        """
+        We are not allowing degenerate polygons.  Due to computer
+        restrictions, may have to change this to limit lower size.
+        Could use largest distance between two vertices as a judge.
+        """
+        if scale == 0:
+            raise ValueError('Resultant polygon would be too small')
+
+        new_coords    = []
+        centroid      = self.centroid()
+        first_vertice = self.head
+        sentinel      = first_vertice
+
+        new_coords.append(
+            self.scale_vertice_from_point(first_vertice, centroid, abs(scale)))
+        """ Traversal """
+        first_vertice = first.next
+        while first_vertice != sentinel:
+            if self.orientation:
+                new_coords.append(
+                    self.scale_vertice_from_point(
+                        first_vertice, centroid, abs(scale))))
+            else:
+                new_coords.insert(
+                    0, self.scale_vertice_from_point(
+                        first_vertice, centroid, abs(scale))))
+            first_vertice = first_vertice.next
+
+        return Polygon(new_coords, clockwise)
     """
     The following methods have to do with treating the edges of the
     polygon as line segments.
@@ -266,14 +436,14 @@ class SimplePolygon(object):
         return False
 
 
-    def is_simple(self):
+    def is_simple(self):    # NOT FINISHED #
         """
         See Line Intersection Class for details.
         """
         """
         Disabled until code is fixed up, simply returns True.
         """
-        LineIntrsct = LineIntersection(self.get_edges())
+        #LineIntrsct = line_intersection.PUTNAMEHERE(self.get_edges())
         return True #not LineIntrsct.check_intersection()
 
     """
@@ -400,13 +570,13 @@ class SimplePolygon(object):
 
     def all_convex_vertices(self):
         """
-        Traverses through polygon using sentinel, applying vertice_is_convex
-        to each vertice.
+        Traverses through polygon using a sentinel to stop,
+        applying vertice_is_convex at each vertice.
         """
         """ Resetting self.convex/concave """
         self.convex = self.concave = []
 
-        cursor = self.head
+        cursor   = self.head
         sentinel = cursor
 
         if self.vertice_is_convex(cursor):
