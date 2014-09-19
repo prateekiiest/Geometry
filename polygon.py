@@ -2,13 +2,7 @@
 Polygon Module for Geometry Package
 
 Things to do:
-
-add unit tests for Polygon class
-re-write is_simple in SimplePolygon - much later
-
-rewrite rotate, translate, scale, scaleVertex, rotateVertex - finished
-translateVertex and Polygon is complete - finishes
-rewrite and comment/document Polygon Class - finished
+add unit tests
 """
 import math
 

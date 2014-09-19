@@ -2,9 +2,7 @@
 Line Intersection Module for Geometry Package
 
 Things to do:
-
-add unit tests for Line Intersection Class
-re-write entire file
+add unit tests
 """
 
 class LineIntersection(object):
