@@ -135,6 +135,7 @@ class SimplePolygon(object):
         eachother, and remove coordinate from self.coordinates, updating
         self.vertex_number as well.
         """
+
         cursor = self.head
         while cursor.coord != vertice_coord:
             cursor = cursor.next
@@ -369,6 +370,7 @@ class SimplePolygon(object):
             first_vertice = first_vertice.next
 
         return Polygon(new_coords, clockwise)
+
     """
     The following methods have to do with treating the edges of the
     polygon as line segments.
