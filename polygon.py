@@ -13,7 +13,7 @@ rewrite and comment/document Polygon Class - finished
 import math
 
 import triangulate
-#import line_intersection
+import lineintersection
 
 
 
@@ -456,15 +456,13 @@ class SimplePolygon(object):
         return False
 
 
-    def is_simple(self):    # NOT FINISHED #
+    def is_simple(self):
         """
         See Line Intersection Class for details.
         """
-        """
-        Disabled until code is fixed up, simply returns True.
-        """
-        #LineIntrsct = line_intersection.PUTNAMEHERE(self.get_edges())
-        return True #not LineIntrsct.check_intersection()
+        LI = lineintersection.LineIntersection(
+                              self.get_edges())
+        return not LI.general_intersection()
 
     """
     The following methods have to do with the area of the
