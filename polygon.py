@@ -58,7 +58,7 @@ class SimplePolygon(object):
         later methods, as with line_segments.
         """
         self.coordinates      = coordinates
-        self.vertex_number    = self.count_vertices()
+        self.vertice_number    = self.count_vertices()
         self.orientation      = None
         self.head             = None
         self.line_segments    = None
@@ -125,7 +125,7 @@ class SimplePolygon(object):
         if not self.coordinate_in_polygon(vertice_coord):
             raise ValueError('Vertice not in polygon')
 
-        elif self.vertex_number == 3:
+        elif self.vertice_number == 3:
             raise ValueError('Simple polygon must have three vertices')
 
         """
@@ -133,7 +133,7 @@ class SimplePolygon(object):
         self.head, we traverse the polygon until we reach the vertice
         to be removed.  We change the vertices adjacent to connect with
         eachother, and remove coordinate from self.coordinates, updating
-        self.vertex_number as well.
+        self.vertice_number as well.
         """
 
         cursor = self.head
@@ -148,7 +148,7 @@ class SimplePolygon(object):
         """ Tidying up and updating polygon attributes """
         cursor = None
         self.coordinates.remove(vertice_coord)
-        self.vertex_number -= 1
+        self.vertice_number -= 1
         return
 
 
@@ -178,7 +178,7 @@ class SimplePolygon(object):
         """ Updating polygon data """
         cursor_index = self.coordinates.index(cursor.coord)
         self.coordinates.insert(cursor_index, vertice_coord)
-        self.vertex_number += 1
+        self.vertice_number += 1
         """ Checking if polygon remains simple """
         if not self.is_simple():
             self.remove(vertice_coord)
@@ -616,4 +616,4 @@ class SimplePolygon(object):
 
 
     def __repr__(self):
-        return '%s-gon at %s' % (self.vertex_number, self.head)
+        return '%s-gon at %s' % (self.vertice_number, self.head)
