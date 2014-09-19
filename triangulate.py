@@ -4,7 +4,7 @@ Triangulate Module for Geometry Package
 Things to do:
 
 add unit tests for Triangulate Class
-re-write entire Triangulate Class.
+re-write entire Triangulate Class. -finished
 """
 import math
 
