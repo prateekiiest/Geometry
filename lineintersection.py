@@ -105,3 +105,7 @@ class LineIntersection(object):
             i += 1
 
         return False
+
+
+    def __repr__(self):
+        return 'Class for General Line Intersection in the plane'
