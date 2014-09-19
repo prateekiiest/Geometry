@@ -6,8 +6,6 @@ Things to do:
 add unit tests for Triangulate Class
 re-write entire Triangulate Class.
 """
-
-import random
 import math
 
 import polygon
@@ -32,13 +30,14 @@ class Triangulate(object):
 
     def __init__(self, coordinates, polygon = None):
 
-        self.coordinates = coordinates
-        self.polygon = polygon if polygon else polygon.SimplePolygon(coordinates)
+        self.coordinates   = polygon.coordinates if polygon else coordinates
+        self.polygon       = polygon if polygon else polygon.SimplePolygon(coordinates)
         self.triangulation = []
 
 
-    def original_polygon(self):
-        return Polygon(self.data)
+    def reset(self):
+        self.triangulation = []
+        self.polygon       = polygon.SimplePolygon(self.coordinates, True)
 
     """ The following are helper functions for triangulation """
 

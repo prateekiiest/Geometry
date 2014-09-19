@@ -12,7 +12,7 @@ rewrite and comment/document Polygon Class - finished
 """
 import math
 
-#import triangulate
+import triangulate
 #import line_intersection
 
 
