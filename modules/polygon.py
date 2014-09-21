@@ -52,7 +52,7 @@ class SimplePolygon(object):
         later methods, as with line_segments.
         """
         self.coordinates      = coordinates
-        self.vertice_number    = self.count_vertices()
+        self.vertice_number   = self.count_vertices()
         self.orientation      = None
         self.head             = None
         self.line_segments    = None
@@ -61,16 +61,16 @@ class SimplePolygon(object):
 
         """ Orientation initialization """
         if orientation_bool:
-            self.head = self.orientate(coordinates)
+            self.head = self.orientate(coordinates, True)
         else:
-            self.head = self.orientate(coordinates, False)
+            self.head = self.orientate(coordinates)
 
     """
     The following are methods for working with the vertices of
     the polygon object.
     """
 
-    def orientate(self, coordinates, clockwise = True):
+    def orientate(self, coordinates, clockwise = False):
         """
         This method creates a list of vertices with data from
         coordinates.  It then iterates over the list assigning
@@ -89,11 +89,11 @@ class SimplePolygon(object):
 
         vertices   = [Vertice(coord) for coord in coordinates]
         poly_sides = len(vertices)
-        orient_var = 1 if clockwise else -1
+        orient_var = -1 if clockwise else 1
 
         for i in xrange(poly_sides):
-            vertices[i % poly_sides].prev = vertices[(i-orient_var) % poly_sides]
-            vertices[i % poly_sides].next = vertices[(i+orient_var) % poly_sides]
+            vertices[i % poly_sides].prev = vertices[(i+orient_var) % poly_sides]
+            vertices[i % poly_sides].next = vertices[(i-orient_var) % poly_sides]
         """
         self.orientation is set to clockwise argument and self.head
         becomes the first vertice in the list.
@@ -370,7 +370,7 @@ class SimplePolygon(object):
     polygon as line segments.
     """
 
-    def get_edges():
+    def get_edges(self):
         """
         Returns list of line segments in the form [(x1,y1), (x2,y2)].
         Traverses through linked list, adding line segments until
@@ -450,7 +450,7 @@ class SimplePolygon(object):
         return False
 
 
-    def is_simple(self):
+    def polygon_is_simple(self):
         """
         See Line Intersection Class for details.
         """
@@ -468,14 +468,15 @@ class SimplePolygon(object):
         Calculates total signed area of polygon.
         Will be negative if oriented clockwise, and positive if ccw.
         Traverses polygon as in get_edges, calculating what it needs
-        from each vertice.  In this case, the signed area A can be
-        written as:
-        A = (1/2)(x_1y_2 - x_2y_1 + x_2y_3 - x_3y_2+...+x_ny_1-x_1y_n)
-        Which by grouping the data we can see that we can calculate each
-        term cycling through the polygon vertices.
+        from each vertice.  For details on the algorithm, see
+        http://www.mathopenref.com/coordpolygonarea2.html.  The area
+        found to the left of the line-sigment is calculated and working
+        around the polygon, we end up with the total area.  It is very
+        important that you cycle in one direction(say cyclically) and
+        that it is a simple closed polygon in order for this to work.
         """
         first_vertice     = self.head
-        second_vertice    = first.next
+        second_vertice    = first_vertice.next
         sentinel          = first_vertice
 
         """ Formula to calculate each partial area as mentioned above """
@@ -577,7 +578,7 @@ class SimplePolygon(object):
     def polygon_is_convex(self):
         """ Applies all_convex_vertices and analyzes """
         self.all_convex_vertices()
-        return True if not self.concave else False
+        return True if not self.concave_vertices else False
 
 
     def all_convex_vertices(self):
@@ -586,23 +587,24 @@ class SimplePolygon(object):
         applying vertice_is_convex at each vertice.
         """
         """ Resetting self.convex/concave """
-        self.convex = self.concave = []
+        self.convex_vertices  = []
+        self.concave_vertices = []
 
         cursor   = self.head
         sentinel = cursor
 
         if self.vertice_is_convex(cursor):
-            self.convex.append(cursor.coord)
+            self.convex_vertices.append(cursor.coord)
         else:
-            self.concave.append(cursor.coord)
+            self.concave_vertices.append(cursor.coord)
 
         cursor = cursor.next
         while cursor != sentinel:
 
             if self.vertice_is_convex(cursor):
-                self.convex.append(cursor.coord)
+                self.convex_vertices.append(cursor.coord)
             else:
-                self.concave.append(cursor.coord)
+                self.concave_vertices.append(cursor.coord)
 
             cursor = cursor.next
 

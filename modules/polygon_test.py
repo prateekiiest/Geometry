@@ -1,5 +1,5 @@
 """
-This file will act as a test suite for the BeatNik files.
+This file contains test methods for polygon.py.
 """
 
 import unittest
@@ -43,6 +43,15 @@ class TestPolygon(unittest.TestCase):
                 continue
             for tpl in example:
                 self.failUnlessEqual(example.count(tpl), 1)
+
+    def test_cw_ccw_difference(self):
+
+        example1 = TestPolygon.examples[0]
+        pgon1 = polygon.SimplePolygon(example1, True)
+        pgon2 = polygon.SimplePolygon(example1, False)
+
+        self.assertEqual(pgon1.head.coord, pgon2.head.coord)
+        self.assertNotEqual(pgon1.head.next.coord, pgon2.head.next.coord)
 
     def test_orientation(self, clockwise = False):
 
@@ -88,6 +97,28 @@ class TestPolygon(unittest.TestCase):
         self.failUnlessEqual(pgon1.get_perimeter(), 4)
         self.assertAlmostEqual(pgon2.get_perimeter(), 2 + math.sqrt(2.0))
 
+    def test_share_edge(self):
+
+        example1 = [(0,0),(0,1),(1,1),(1,0)]
+        example2 = [(0,0),(0,-1),(-1,-1),(-1,0)]
+        example3 = [(0,0),(1,0),(1,-1),(0,-1)]
+        pgon1 = polygon.SimplePolygon(example1, True)
+        pgon2 = polygon.SimplePolygon(example2, False)
+        pgon3 = polygon.SimplePolygon(example3, False)
+
+        self.assertFalse(pgon1.share_edge(pgon2))
+        self.assertTrue(pgon2.share_edge(pgon3))
+        self.assertTrue(pgon1.share_edge(pgon3))
+
+    def test_total_signed_area(self):
+
+        example1 = TestPolygon.examples[0]
+        pgon1 = polygon.SimplePolygon(example1, True)
+        pgon2 = polygon.SimplePolygon(example1, False)
+        pgon1_tsa = pgon1.total_signed_area()
+        pgon2_tsa = pgon2.total_signed_area()
+        self.assertNotEqual(pgon1_tsa, pgon2_tsa)
+        self.assertEqual(abs(pgon1_tsa), abs(pgon2_tsa))
 
 if __name__ == '__main__':
     unittest.main()

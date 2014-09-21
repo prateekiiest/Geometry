@@ -2,7 +2,9 @@
 Line Intersection Module for Geometry Package
 
 Things to do:
-add unit tests
+
+add unit tests for Line Intersection Class
+re-write entire file
 """
 
 class LineIntersection(object):
@@ -92,7 +94,7 @@ class LineIntersection(object):
                 events.append(line_name)
             elif line_name in events:
                 events.remove(line_name)
-                # New endpoint arrives while another is active:
+            """ New endpoint arrives while another is active: """
             else:
                 for event in events:
                     """ Grabs data for calculation from dictionary using keys """
