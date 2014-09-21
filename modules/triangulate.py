@@ -34,6 +34,7 @@ class Triangulate(object):
 
 
     def reset(self):
+        """ Resets to a clockwise orientation using coordinate data."""
         self.triangulation = []
         self.polygon       = polygon.SimplePolygon(self.coordinates, True)
 
